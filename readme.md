@@ -32,7 +32,7 @@ It supports single-target analysis, batch processing via file lists, and directo
 ## **⚙️ Installation**
 
 1. **Clone the repository:**  
-   git clone \[https://github.com/yourusername/sentientcheck.git\](https://github.com/yourusername/sentientcheck.git)  
+   git clone \[https://github.com/jharp21/sentientcheck.git\](https://github.com/jharp21/sentientcheck.git)  
    cd sentientcheck
 
 2. **Install dependencies:**  
@@ -111,3 +111,4 @@ Risk Factors:
 ## **⚠️ Disclaimer**
 
 This tool is for educational and professional defensive security purposes only. Ensure you have authorization before scanning files or URLs that may contain sensitive data, as hashes and URLs are submitted to third-party services.
+
