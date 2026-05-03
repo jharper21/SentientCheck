@@ -33,11 +33,19 @@ def check_file_path(checker, path):
     file_path = Path(path)
     file_hash = checker.calculate_hash(file_path)
     if not file_hash:
+        error = f"Could not calculate hash for {file_path}"
         return {
             "target": file_path.name,
             "type": "file",
             "path": str(file_path),
-            "error": f"Could not calculate hash for {file_path}",
+            "assessment": {
+                "rating": "ERROR",
+                "score": 0,
+                "factors": [error],
+                "sources_checked": 0,
+            },
+            "raw_results": {"error": error},
+            "error": error,
         }
     report = check_file_hash(checker, file_hash)
     report["target"] = file_path.name
@@ -47,7 +55,10 @@ def check_file_path(checker, path):
 
 
 def scan_targets(checker, target_type, targets, sleep_seconds=2):
-    target_list = load_targets(targets)
+    if target_type == "file" and not isinstance(targets, (list, tuple, set)):
+        target_list = [str(targets)]
+    else:
+        target_list = load_targets(targets)
     reports = []
 
     for index, target in enumerate(target_list):

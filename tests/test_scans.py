@@ -206,6 +206,19 @@ def test_scan_targets_file_uses_file_path_hashing(tmp_path):
     assert reports[0]["raw_results"]["mb"]["query_status"] == "hash_not_found"
 
 
+def test_scan_targets_file_string_path_hashes_file_not_contents(tmp_path):
+    sample = tmp_path / "sample.bin"
+    sample.write_text("line-one\nline-two\n", encoding="utf-8")
+    checker = FakeChecker()
+
+    reports = scan_targets(checker, "file", str(sample), sleep_seconds=0)
+
+    assert checker.hash_requests == [sample]
+    assert len(reports) == 1
+    assert reports[0]["target"] == "sample.bin"
+    assert reports[0]["sha256"] == "b" * 64
+
+
 def test_check_file_path_returns_structured_error_when_hash_fails(tmp_path):
     sample = tmp_path / "unreadable.bin"
     checker = HashFailureChecker()

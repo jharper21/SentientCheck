@@ -4,15 +4,17 @@ from datetime import datetime
 from pathlib import Path
 
 
-def save_json_report(report_data_list, output_path=None):
+def save_json_report(report_data_list, output_path=None, overwrite=False):
     output = Path(output_path) if output_path is not None else _default_json_path(report_data_list)
+    _ensure_can_write(output, overwrite)
     with output.open("w", encoding="utf-8") as report_file:
         json.dump(report_data_list, report_file, indent=4)
     return output
 
 
-def save_csv_report(report_data_list, output_path=None):
+def save_csv_report(report_data_list, output_path=None, overwrite=False):
     output = Path(output_path) if output_path is not None else _default_csv_path()
+    _ensure_can_write(output, overwrite)
     with output.open(mode="w", newline="", encoding="utf-8") as report_file:
         writer = csv.writer(report_file)
         writer.writerow(
@@ -49,6 +51,11 @@ def save_csv_report(report_data_list, output_path=None):
             )
 
     return output
+
+
+def _ensure_can_write(output, overwrite):
+    if output.exists() and not overwrite:
+        raise FileExistsError(f"Refusing to overwrite existing report: {output}")
 
 
 def _default_json_path(report_data_list):
