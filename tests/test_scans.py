@@ -106,3 +106,55 @@ def test_provider_requests_use_timeout(monkeypatch):
 
     assert len(calls) == 9
     assert all(kwargs["timeout"] == REQUEST_TIMEOUT for _, kwargs in calls)
+
+
+from sentientcheck.scans import check_file_hash, scan_targets
+
+
+class FakeChecker:
+    def check_ip_vt(self, target):
+        return {"data": {"attributes": {"last_analysis_stats": {"malicious": 1}}}}
+
+    def check_ip_abuse(self, target):
+        return None
+
+    def check_url_vt(self, target):
+        return {"error": "URL not previously analyzed. Submission required."}
+
+    def check_url_urlscan(self, target):
+        return None
+
+    def check_url_urlhaus(self, target):
+        return {"query_status": "no_results"}
+
+    def check_file_vt(self, target):
+        return {"error": "File hash not found in VirusTotal database."}
+
+    def check_file_mb(self, target):
+        return {"query_status": "hash_not_found"}
+
+    def check_file_hybrid(self, target):
+        return None
+
+    def check_file_urlhaus(self, target):
+        return {"query_status": "no_results"}
+
+    def assess_risk(self, target_type, results):
+        return {"rating": "CLEAN", "score": 0, "factors": [], "sources_checked": 1}
+
+
+def test_scan_targets_returns_structured_reports():
+    reports = scan_targets(FakeChecker(), "ip", ["1.1.1.1", "8.8.8.8"], sleep_seconds=0)
+
+    assert [report["target"] for report in reports] == ["1.1.1.1", "8.8.8.8"]
+    assert reports[0]["type"] == "ip"
+    assert reports[0]["assessment"]["rating"] == "CLEAN"
+    assert "raw_results" in reports[0]
+
+
+def test_check_file_hash_does_not_read_local_file():
+    report = check_file_hash(FakeChecker(), "a" * 64)
+
+    assert report["target"] == "a" * 64
+    assert report["type"] == "file"
+    assert report["raw_results"]["mb"]["query_status"] == "hash_not_found"
