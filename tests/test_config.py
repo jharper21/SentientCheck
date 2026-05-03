@@ -1,4 +1,5 @@
 from sentientcheck.config import (
+    API_KEY_ENV_VARS,
     PROVIDERS,
     credential_status,
     load_api_keys,
@@ -7,6 +8,8 @@ from sentientcheck.config import (
 
 
 def test_load_api_keys_reads_environment(monkeypatch):
+    for env_var in API_KEY_ENV_VARS:
+        monkeypatch.delenv(env_var, raising=False)
     monkeypatch.setenv("VT_API_KEY", "vt-secret")
     monkeypatch.setenv("ABUSE_API_KEY", "abuse-secret")
 
