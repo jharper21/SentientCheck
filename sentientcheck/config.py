@@ -1,6 +1,8 @@
 import os
 from pathlib import Path
 
+from sentientcheck.core import ReputationChecker
+
 try:
     from dotenv import load_dotenv
 except ImportError:
@@ -97,3 +99,14 @@ def credential_status(load_dotenv_file=True):
         if info["required"] and not info["present"]
     ]
     return {"providers": providers, "missing_required": missing_required}
+
+
+def create_checker(load_dotenv_file=True):
+    keys = load_api_keys(load_dotenv_file=load_dotenv_file)
+    return ReputationChecker(
+        keys["VT_API_KEY"],
+        keys["ABUSE_API_KEY"],
+        keys["URLSCAN_API_KEY"],
+        keys["HYBRID_API_KEY"],
+        keys["URLHAUS_API_KEY"],
+    )
