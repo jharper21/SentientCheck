@@ -51,7 +51,7 @@ def scan_targets(checker, target_type, targets, sleep_seconds=2):
         elif target_type == "url":
             report = check_url(checker, target)
         elif target_type == "file":
-            report = check_file_hash(checker, target)
+            report = check_file_path(checker, target)
         else:
             raise ValueError(f"Unsupported target type: {target_type}")
 

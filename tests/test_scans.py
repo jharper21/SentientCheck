@@ -112,6 +112,13 @@ from sentientcheck.scans import check_file_hash, scan_targets
 
 
 class FakeChecker:
+    def __init__(self):
+        self.hash_requests = []
+
+    def calculate_hash(self, path):
+        self.hash_requests.append(Path(path))
+        return "b" * 64
+
     def check_ip_vt(self, target):
         return {"data": {"attributes": {"last_analysis_stats": {"malicious": 1}}}}
 
@@ -158,3 +165,17 @@ def test_check_file_hash_does_not_read_local_file():
     assert report["target"] == "a" * 64
     assert report["type"] == "file"
     assert report["raw_results"]["mb"]["query_status"] == "hash_not_found"
+
+
+def test_scan_targets_file_uses_file_path_hashing(tmp_path):
+    sample = tmp_path / "sample.bin"
+    sample.write_bytes(b"sentientcheck")
+    checker = FakeChecker()
+
+    reports = scan_targets(checker, "file", [sample], sleep_seconds=0)
+
+    assert checker.hash_requests == [sample]
+    assert reports[0]["target"] == "sample.bin"
+    assert reports[0]["path"] == str(sample)
+    assert reports[0]["sha256"] == "b" * 64
+    assert reports[0]["raw_results"]["mb"]["query_status"] == "hash_not_found"
