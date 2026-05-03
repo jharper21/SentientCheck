@@ -108,7 +108,7 @@ def test_provider_requests_use_timeout(monkeypatch):
     assert all(kwargs["timeout"] == REQUEST_TIMEOUT for _, kwargs in calls)
 
 
-from sentientcheck.scans import check_file_hash, scan_targets
+from sentientcheck.scans import check_file_hash, check_file_path, scan_targets
 
 
 class FakeChecker:
@@ -150,6 +150,12 @@ class FakeChecker:
         return {"rating": "CLEAN", "score": 0, "factors": [], "sources_checked": 1}
 
 
+class HashFailureChecker(FakeChecker):
+    def calculate_hash(self, path):
+        self.hash_requests.append(Path(path))
+        return None
+
+
 def test_scan_targets_returns_structured_reports():
     reports = scan_targets(FakeChecker(), "ip", ["1.1.1.1", "8.8.8.8"], sleep_seconds=0)
 
@@ -179,3 +185,14 @@ def test_scan_targets_file_uses_file_path_hashing(tmp_path):
     assert reports[0]["path"] == str(sample)
     assert reports[0]["sha256"] == "b" * 64
     assert reports[0]["raw_results"]["mb"]["query_status"] == "hash_not_found"
+
+
+def test_check_file_path_returns_structured_error_when_hash_fails(tmp_path):
+    sample = tmp_path / "unreadable.bin"
+    checker = HashFailureChecker()
+
+    report = check_file_path(checker, sample)
+
+    assert report["target"] == "unreadable.bin"
+    assert report["type"] == "file"
+    assert "error" in report

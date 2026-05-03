@@ -33,7 +33,12 @@ def check_file_path(checker, path):
     file_path = Path(path)
     file_hash = checker.calculate_hash(file_path)
     if not file_hash:
-        raise ValueError(f"Could not calculate hash for {file_path}")
+        return {
+            "target": file_path.name,
+            "type": "file",
+            "path": str(file_path),
+            "error": f"Could not calculate hash for {file_path}",
+        }
     report = check_file_hash(checker, file_hash)
     report["target"] = file_path.name
     report["path"] = str(file_path)
