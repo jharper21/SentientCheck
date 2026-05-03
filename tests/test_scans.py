@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import pytest
+
 from sentientcheck.core import REQUEST_TIMEOUT, ReputationChecker
 from sentientcheck.config import create_checker
 
@@ -108,7 +110,12 @@ def test_provider_requests_use_timeout(monkeypatch):
     assert all(kwargs["timeout"] == REQUEST_TIMEOUT for _, kwargs in calls)
 
 
-from sentientcheck.scans import check_file_hash, check_file_path, scan_targets
+from sentientcheck.scans import (
+    check_file_hash,
+    check_file_path,
+    scan_directory,
+    scan_targets,
+)
 
 
 class FakeChecker:
@@ -163,6 +170,18 @@ def test_scan_targets_returns_structured_reports():
     assert reports[0]["type"] == "ip"
     assert reports[0]["assessment"]["rating"] == "CLEAN"
     assert "raw_results" in reports[0]
+
+
+def test_scan_targets_rejects_unsupported_target_type():
+    with pytest.raises(ValueError, match="Unsupported target type"):
+        scan_targets(FakeChecker(), "domain", ["example.com"], sleep_seconds=0)
+
+
+def test_scan_directory_rejects_invalid_directory(tmp_path):
+    missing = tmp_path / "missing"
+
+    with pytest.raises(ValueError, match="Invalid directory"):
+        scan_directory(FakeChecker(), missing, sleep_seconds=0)
 
 
 def test_check_file_hash_does_not_read_local_file():
