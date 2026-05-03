@@ -7,6 +7,9 @@ from datetime import datetime
 import requests
 
 
+REQUEST_TIMEOUT = 10
+
+
 class ReputationChecker:
     def __init__(
         self,
@@ -58,7 +61,11 @@ class ReputationChecker:
         print(f"[*] (VirusTotal) Checking IP: {ip_address}...")
         endpoint = f"{self.vt_base_url}/ip_addresses/{ip_address}"
         try:
-            response = requests.get(endpoint, headers=self.vt_headers)
+            response = requests.get(
+                endpoint,
+                headers=self.vt_headers,
+                timeout=REQUEST_TIMEOUT,
+            )
             if response.status_code == 200:
                 return response.json()
             if response.status_code == 404:
@@ -74,7 +81,11 @@ class ReputationChecker:
         endpoint = f"{self.vt_base_url}/urls/{url_id}"
 
         try:
-            response = requests.get(endpoint, headers=self.vt_headers)
+            response = requests.get(
+                endpoint,
+                headers=self.vt_headers,
+                timeout=REQUEST_TIMEOUT,
+            )
             if response.status_code == 200:
                 return response.json()
             if response.status_code == 404:
@@ -88,7 +99,11 @@ class ReputationChecker:
         print(f"[*] (VirusTotal) Checking Hash: {file_hash}")
         endpoint = f"{self.vt_base_url}/files/{file_hash}"
         try:
-            response = requests.get(endpoint, headers=self.vt_headers)
+            response = requests.get(
+                endpoint,
+                headers=self.vt_headers,
+                timeout=REQUEST_TIMEOUT,
+            )
             if response.status_code == 200:
                 return response.json()
             if response.status_code == 404:
@@ -110,7 +125,12 @@ class ReputationChecker:
             "verbose": "",
         }
         try:
-            response = requests.get(endpoint, headers=self.abuse_headers, params=params)
+            response = requests.get(
+                endpoint,
+                headers=self.abuse_headers,
+                params=params,
+                timeout=REQUEST_TIMEOUT,
+            )
             if response.status_code == 200:
                 return response.json()
             if response.status_code == 401:
@@ -134,7 +154,12 @@ class ReputationChecker:
         }
 
         try:
-            response = requests.get(endpoint, headers=self.urlscan_headers, params=params)
+            response = requests.get(
+                endpoint,
+                headers=self.urlscan_headers,
+                params=params,
+                timeout=REQUEST_TIMEOUT,
+            )
             if response.status_code == 200:
                 return response.json()
             if response.status_code == 404:
@@ -148,7 +173,11 @@ class ReputationChecker:
         print("[*] (MalwareBazaar) Checking Hash...")
         data = {"query": "get_info", "hash": file_hash}
         try:
-            response = requests.post(self.mb_base_url, data=data, timeout=10)
+            response = requests.post(
+                self.mb_base_url,
+                data=data,
+                timeout=REQUEST_TIMEOUT,
+            )
             if response.status_code == 200:
                 return response.json()
             return {"error": f"MalwareBazaar Error: {response.status_code}"}
@@ -164,7 +193,12 @@ class ReputationChecker:
         endpoint = f"{self.hybrid_base_url}/search/hash"
         data = {"hash": file_hash}
         try:
-            response = requests.post(endpoint, headers=self.hybrid_headers, data=data)
+            response = requests.post(
+                endpoint,
+                headers=self.hybrid_headers,
+                data=data,
+                timeout=REQUEST_TIMEOUT,
+            )
             if response.status_code == 200:
                 return response.json()
             if response.status_code == 404:
@@ -183,7 +217,7 @@ class ReputationChecker:
                 endpoint,
                 data=data,
                 headers=self.urlhaus_headers,
-                timeout=10,
+                timeout=REQUEST_TIMEOUT,
             )
             if response.status_code == 200:
                 return response.json()
@@ -201,7 +235,7 @@ class ReputationChecker:
                 endpoint,
                 data=data,
                 headers=self.urlhaus_headers,
-                timeout=10,
+                timeout=REQUEST_TIMEOUT,
             )
             if response.status_code == 200:
                 return response.json()
