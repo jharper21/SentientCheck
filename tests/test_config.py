@@ -51,3 +51,35 @@ def test_provider_metadata_contains_expected_services():
     }
     assert PROVIDERS["virustotal"]["required"] is True
     assert PROVIDERS["malwarebazaar"]["env_var"] is None
+
+
+def test_build_env_content_preserves_key_order():
+    from sentientcheck.setup_wizard import build_env_content
+
+    content = build_env_content({
+        "VT_API_KEY": "vt",
+        "ABUSE_API_KEY": "",
+        "URLSCAN_API_KEY": "urlscan",
+        "HYBRID_API_KEY": "",
+        "URLHAUS_API_KEY": "",
+    })
+
+    assert content.splitlines() == [
+        "VT_API_KEY=vt",
+        "ABUSE_API_KEY=",
+        "URLSCAN_API_KEY=urlscan",
+        "HYBRID_API_KEY=",
+        "URLHAUS_API_KEY=",
+    ]
+
+
+def test_validate_credentials_marks_missing_and_unchecked(monkeypatch):
+    from sentientcheck.setup_wizard import validate_credentials
+
+    for env_var in API_KEY_ENV_VARS:
+        monkeypatch.delenv(env_var, raising=False)
+
+    result = validate_credentials(load_dotenv_file=False, perform_network_checks=False)
+
+    assert result["virustotal"]["status"] == "missing"
+    assert result["malwarebazaar"]["status"] == "not_required"
