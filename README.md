@@ -1,117 +1,148 @@
-# **SentientCheck \- Multi-Source Reputation Tool**
+# SentientCheck - Multi-Source Reputation Tool
 
-**SentientCheck** is a robust, multi-source reputation checking utility designed for InfoSec professionals, SOC analysts, and Threat Hunters. It aggregates intelligence from six major security APIs to provide a comprehensive risk assessment for IPs, URLs, and Files.
+SentientCheck is a multi-source reputation checking utility for defensive security work. It checks IPs, URLs, files, and file hashes against threat-intelligence providers, then returns a unified rating, confidence score, source details, and optional CSV/JSON reports.
 
-It supports single-target analysis, batch processing via file lists, and directory scanning, with automated reporting in CSV and JSON formats.
+SentientCheck can run as:
 
-## **🚀 Features**
+- An interactive CLI: `python SentientCheck.py`
+- A local MCP server for clients such as Claude Desktop and Codex: `python sentientcheck_mcp.py`
+- Importable Python modules under `sentientcheck/`
 
-* **Multi-Source Intelligence:** Cross-references targets against multiple databases simultaneously.  
-* **Risk Assessment Engine:** Aggregates data to calculate a unified **Confidence Score (0-100)** and **Verdict** (Clean, Suspicious, High Risk, Malicious).  
-* **Batch Processing:**  
-  * Bulk scan IPs or URLs from text files.  
-  * Recursively scan local directories for file reputation.  
-  * Built-in rate limiting to respect API quotas.  
-* **Reporting:**  
-  * **CSV:** Spreadsheet-friendly summary of all scanned items.  
-  * **JSON:** Full detailed report including raw API responses.
+## Features
 
-## **🛡️ Integrations**
+- Multi-source IP, URL, file, and hash reputation checks.
+- Unified risk assessment with rating and confidence score.
+- Single-target scans, IP/URL list scans, and directory file scans.
+- CSV and JSON report writers.
+- Guided API credential setup wizard.
+- MCP tools for AI-client driven investigations.
 
-| Target Type | Source APIs Used |
-| :---- | :---- |
-| **IP Address** | VirusTotal v3, AbuseIPDB |
-| **URL** | VirusTotal v3, urlscan.io, URLhaus |
-| **File / Hash** | VirusTotal v3, MalwareBazaar, Hybrid Analysis, URLhaus |
+## Integrations
 
-## **📋 Prerequisites**
+| Target type | Source APIs |
+| --- | --- |
+| IP address | VirusTotal v3, AbuseIPDB |
+| URL | VirusTotal v3, urlscan.io, URLhaus |
+| File or hash | VirusTotal v3, MalwareBazaar, Hybrid Analysis, URLhaus |
 
-* Python 3.6+  
-* requests library
+VirusTotal is required for the baseline feature set. The other keys are optional but improve coverage. MalwareBazaar lookups do not require a key for the current hash lookup flow.
 
-## **⚙️ Installation**
+## Installation
 
-1. **Clone the repository:**  
-   git clone [[https://github.com/jharp21/sentientcheck.git](https://github.com/jharper21/SentientCheck.git)]
-   cd sentientcheck
+```powershell
+git clone https://github.com/jharper21/SentientCheck.git
+cd SentientCheck
+python -m pip install -r requirements.txt
+```
 
-2. **Install dependencies:**  
-   pip install requests
+Python 3.10+ is recommended.
 
-## **🔑 Configuration (API Keys)**
+## Guided API Setup
 
-You can provide API keys via **Environment Variables** (recommended) or enter them interactively when the script runs.
+Run the setup wizard:
 
-### **Environment Variables Setup**
+```powershell
+python -m sentientcheck.setup_wizard
+```
 
-Setting these allows the script to run without prompting for credentials every time.
+The wizard explains each provider, shows where to get the key, lets you skip optional providers, writes a local `.env`, and validates configured keys where a safe lightweight validation endpoint is available.
 
-**Linux / Mac:**
+SentientCheck does not create or ship generic shared API keys. Each key must come from your own provider account.
 
-export VT\_API\_KEY="your\_virustotal\_key"  
-export ABUSE\_API\_KEY="your\_abuseipdb\_key"  
-export URLSCAN\_API\_KEY="your\_urlscan\_key"  
-export HYBRID\_API\_KEY="your\_hybrid\_analysis\_key"  
-export URLHAUS\_API\_KEY="your\_urlhaus\_key"
+Supported environment variables:
 
-**Windows (PowerShell):**
+```dotenv
+VT_API_KEY=your_virustotal_key
+ABUSE_API_KEY=your_abuseipdb_key
+URLSCAN_API_KEY=your_urlscan_key
+HYBRID_API_KEY=your_hybrid_analysis_key
+URLHAUS_API_KEY=your_urlhaus_key
+```
 
-$env:VT\_API\_KEY="your\_virustotal\_key"  
-$env:ABUSE\_API\_KEY="your\_abuseipdb\_key"  
-$env:URLSCAN\_API\_KEY="your\_urlscan\_key"  
-$env:HYBRID\_API\_KEY="your\_hybrid\_analysis\_key"  
-$env:URLHAUS\_API\_KEY="your\_urlhaus\_key"
+Use `.env.example` as the template.
 
-**Note:** VirusTotal is the only *mandatory* API key. Others are optional but highly recommended for better accuracy.
+## CLI Usage
 
-## **💻 Usage**
+```powershell
+python SentientCheck.py
+```
 
-Run the script:
+Modes:
 
-python reputation\_checker.py
+1. Check one IP or a text file containing one IP per line.
+2. Check one URL or a text file containing one URL per line.
+3. Check one local file or every regular file in a directory.
 
-### **Modes**
+At the end of each scan, the CLI can save a CSV summary and/or full JSON report.
 
-1. **Check IP Address(es):** Enter a single IP (e.g., 1.1.1.1) or a path to a text file containing one IP per line.  
-2. **Check URL(s):** Enter a single URL (e.g., http://example.com) or a path to a text file containing URLs.  
-3. **Check File(s):** Enter a file path for a single hash check, or a **directory path** to hash and check every file in that folder.
+## MCP Server
 
-### **Batch Scanning**
+Start the local MCP server with stdio transport:
 
-To scan multiple targets, create a text file (e.g., suspects.txt):
+```powershell
+python sentientcheck_mcp.py
+```
 
-192.168.1.50  
-10.0.0.5  
-8.8.8.8
+Exposed MCP tools include:
 
-Then select Option 1 and provide the path: suspects.txt.
+- `check_ip`
+- `check_url`
+- `check_file_hash`
+- `check_file_path`
+- `scan_ip_list`
+- `scan_url_list`
+- `scan_directory_tool`
+- `assess_risk_tool`
+- `save_csv_report_tool`
+- `save_json_report_tool`
+- `credential_status_tool`
+- `validate_credentials_tool`
 
-## **📊 Output Examples**
+If required credentials are missing, scan tools return a structured error with the setup command instead of prompting.
 
-**Console Output:**
+### Claude Desktop Example
 
-\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#  
-   FINAL REPORT: \[http://malicious-site.example\](http://malicious-site.example)  
-\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#  
-Target Type:     URL  
-Sources Checked: 3  
-\------------------------------------------------------------  
-GENERAL RATING:  \[\!\!\!\] MALICIOUS  
-CONFIDENCE:      100/100  
-\------------------------------------------------------------  
-Risk Factors:  
- \- VirusTotal: 18 engines flagged this URL  
- \- urlscan.io: Verdict is MALICIOUS  
- \- URLhaus: URL is listed in database as malware\_download
+Add an MCP server entry similar to this in Claude Desktop's MCP configuration. Adjust the path to your checkout.
 
-## **📝 License**
+```json
+{
+  "mcpServers": {
+    "sentientcheck": {
+      "command": "python",
+      "args": [
+        "C:\\Users\\fpsJH\\OneDrive\\Documents\\New project\\SentientCheck\\sentientcheck_mcp.py"
+      ]
+    }
+  }
+}
+```
+
+### Codex Example
+
+Add a local MCP server command that runs the same script from this repository:
+
+```toml
+[mcp_servers.sentientcheck]
+command = "python"
+args = ["C:\\Users\\fpsJH\\OneDrive\\Documents\\New project\\SentientCheck\\sentientcheck_mcp.py"]
+```
+
+If your client supports a working directory field, set it to this repository root.
+
+## Security Notes
+
+- Keys are stored locally in `.env`; do not commit real API keys.
+- URL and hash lookups may submit indicators to third-party services.
+- File scans hash local files and submit hashes, not file contents.
+- Report writers refuse to overwrite existing explicit output paths unless overwrite is requested by the caller.
+- Run scans only for systems, URLs, and files you are authorized to investigate.
+
+## Testing
+
+```powershell
+python -m pytest -v
+```
+
+## License
 
 [MIT](https://choosealicense.com/licenses/mit/)
-
-## **⚠️ Disclaimer**
-
-This tool is for educational and professional defensive security purposes only. Ensure you have authorization before scanning files or URLs that may contain sensitive data, as hashes and URLs are submitted to third-party services.
-
-
-
-
