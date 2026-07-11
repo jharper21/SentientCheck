@@ -73,33 +73,33 @@ def _default_csv_path():
 
 
 def _vt_detections(raw):
-    if "vt" in raw and "data" in raw["vt"]:
-        stats = raw["vt"]["data"]["attributes"]["last_analysis_stats"]
+    vt = raw.get("vt")
+    if isinstance(vt, dict) and "data" in vt:
+        stats = vt["data"]["attributes"]["last_analysis_stats"]
         return f"{stats.get('malicious', 0)}/{sum(stats.values())}"
     return "N/A"
 
 
 def _abuse_confidence(raw):
-    if "abuse" in raw and "data" in raw["abuse"]:
-        return f"{raw['abuse']['data'].get('abuseConfidenceScore')}%"
+    abuse = raw.get("abuse")
+    if isinstance(abuse, dict) and "data" in abuse:
+        return f"{abuse['data'].get('abuseConfidenceScore')}%"
     return "N/A"
 
 
 def _urlhaus_status(raw):
-    if "urlhaus" not in raw:
+    urlhaus = raw.get("urlhaus")
+    if not isinstance(urlhaus, dict):
         return "N/A"
-    if raw["urlhaus"].get("query_status") == "ok":
-        return raw["urlhaus"].get("threat", "Malicious")
-    if raw["urlhaus"].get("query_status") == "no_results":
+    if urlhaus.get("query_status") == "ok":
+        return urlhaus.get("threat", "Malicious")
+    if urlhaus.get("query_status") == "no_results":
         return "Clean"
     return "N/A"
 
 
 def _hybrid_threat_score(raw):
-    if (
-        "hybrid" in raw
-        and isinstance(raw["hybrid"], list)
-        and len(raw["hybrid"]) > 0
-    ):
-        return str(raw["hybrid"][0].get("threat_score", "N/A"))
+    hybrid = raw.get("hybrid")
+    if isinstance(hybrid, list) and len(hybrid) > 0:
+        return str(hybrid[0].get("threat_score", "N/A"))
     return "N/A"

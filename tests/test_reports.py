@@ -81,6 +81,32 @@ def test_save_csv_report_writes_hash_error_report(tmp_path):
     assert "unreadable.bin,file" in output.read_text()
 
 
+def test_save_csv_report_handles_disabled_optional_provider_results(tmp_path):
+    report = sample_reports()[0]
+    report["raw_results"] = {
+        "vt": {
+            "data": {
+                "attributes": {
+                    "last_analysis_stats": {
+                        "malicious": 0,
+                        "suspicious": 0,
+                        "undetected": 1,
+                    }
+                }
+            }
+        },
+        "abuse": None,
+        "urlhaus": None,
+        "hybrid": None,
+    }
+    output = tmp_path / "report.csv"
+
+    result = save_csv_report([report], output)
+
+    assert result == output
+    assert "N/A" in output.read_text()
+
+
 def test_save_json_report_refuses_existing_output_by_default(tmp_path):
     output = tmp_path / "report.json"
     output.write_text("existing", encoding="utf-8")
