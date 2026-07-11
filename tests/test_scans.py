@@ -228,3 +228,15 @@ def test_check_file_path_returns_structured_error_when_hash_fails(tmp_path):
     assert report["target"] == "unreadable.bin"
     assert report["type"] == "file"
     assert "error" in report
+
+
+def test_legacy_cli_module_imports_without_prompting():
+    import SentientCheck
+
+    assert hasattr(SentientCheck, "main")
+
+
+def test_legacy_cli_does_not_keep_duplicate_reputation_checker():
+    import SentientCheck
+
+    assert not hasattr(SentientCheck, "ReputationChecker")
