@@ -61,11 +61,49 @@ def test_calculate_hash_returns_sha256(tmp_path):
 def test_create_checker_uses_loaded_keys(monkeypatch):
     monkeypatch.setenv("VT_API_KEY", "vt-key")
     monkeypatch.setenv("ABUSE_API_KEY", "abuse-key")
+    monkeypatch.setenv("ABUSECH_API_KEY", "abusech-key")
 
     checker = create_checker(load_dotenv_file=False)
 
     assert checker.vt_api_key == "vt-key"
     assert checker.abuse_api_key == "abuse-key"
+    assert checker.abusech_api_key == "abusech-key"
+
+
+def test_abusech_requests_share_auth_key(monkeypatch):
+    calls = []
+
+    class Response:
+        status_code = 200
+
+        def json(self):
+            return {"query_status": "no_results"}
+
+    def record_post(*args, **kwargs):
+        calls.append(kwargs)
+        return Response()
+
+    monkeypatch.setattr("sentientcheck.core.requests.post", record_post)
+    checker = ReputationChecker("vt-key", abusech_api_key="shared-key")
+
+    checker.check_file_mb("a" * 64)
+    checker.check_url_urlhaus("https://example.com")
+    checker.check_file_urlhaus("a" * 64)
+
+    assert len(calls) == 3
+    assert all(call["headers"] == {"Auth-Key": "shared-key"} for call in calls)
+
+
+def test_abusech_checks_are_skipped_without_auth_key(monkeypatch):
+    def unexpected_post(*args, **kwargs):
+        raise AssertionError("abuse.ch should not be called without an Auth-Key")
+
+    monkeypatch.setattr("sentientcheck.core.requests.post", unexpected_post)
+    checker = ReputationChecker("vt-key")
+
+    assert checker.check_file_mb("a" * 64) is None
+    assert checker.check_url_urlhaus("https://example.com") is None
+    assert checker.check_file_urlhaus("a" * 64) is None
 
 
 def test_provider_requests_use_timeout(monkeypatch):

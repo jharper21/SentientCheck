@@ -17,13 +17,15 @@ class ReputationChecker:
         abuse_api_key=None,
         urlscan_api_key=None,
         hybrid_api_key=None,
+        abusech_api_key=None,
         urlhaus_api_key=None,
     ):
         self.vt_api_key = vt_api_key
         self.abuse_api_key = abuse_api_key
         self.urlscan_api_key = urlscan_api_key
         self.hybrid_api_key = hybrid_api_key
-        self.urlhaus_api_key = urlhaus_api_key
+        self.abusech_api_key = abusech_api_key or urlhaus_api_key
+        self.urlhaus_api_key = self.abusech_api_key
 
         self.vt_base_url = "https://www.virustotal.com/api/v3"
         self.abuse_base_url = "https://api.abuseipdb.com/api/v2"
@@ -52,9 +54,10 @@ class ReputationChecker:
                 "User-Agent": "Falcon Sandbox",
             }
 
-        self.urlhaus_headers = {}
-        if self.urlhaus_api_key:
-            self.urlhaus_headers = {"Auth-Key": self.urlhaus_api_key}
+        self.abusech_headers = {}
+        if self.abusech_api_key:
+            self.abusech_headers = {"Auth-Key": self.abusech_api_key}
+        self.urlhaus_headers = self.abusech_headers
 
     def check_ip_vt(self, ip_address):
         """Checks the reputation of an IP address using VirusTotal."""
@@ -169,13 +172,17 @@ class ReputationChecker:
             return {"error": str(e)}
 
     def check_file_mb(self, file_hash):
-        """Checks MalwareBazaar for the file hash (No API Key Required)."""
+        """Checks MalwareBazaar for the file hash."""
+        if not self.abusech_api_key:
+            return None
+
         print("[*] (MalwareBazaar) Checking Hash...")
         data = {"query": "get_info", "hash": file_hash}
         try:
             response = requests.post(
                 self.mb_base_url,
                 data=data,
+                headers=self.abusech_headers,
                 timeout=REQUEST_TIMEOUT,
             )
             if response.status_code == 200:
@@ -209,6 +216,9 @@ class ReputationChecker:
 
     def check_url_urlhaus(self, url):
         """Checks a URL against the URLhaus database."""
+        if not self.abusech_api_key:
+            return None
+
         print("[*] (URLhaus) Checking URL...")
         endpoint = f"{self.urlhaus_base_url}/url/"
         data = {"url": url}
@@ -227,6 +237,9 @@ class ReputationChecker:
 
     def check_file_urlhaus(self, file_hash):
         """Checks a file hash against the URLhaus database."""
+        if not self.abusech_api_key:
+            return None
+
         print("[*] (URLhaus) Checking Hash...")
         endpoint = f"{self.urlhaus_base_url}/payload/"
         data = {"sha256_hash": file_hash}

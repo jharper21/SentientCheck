@@ -27,7 +27,7 @@ def build_checker():
         keys["ABUSE_API_KEY"],
         keys["URLSCAN_API_KEY"],
         keys["HYBRID_API_KEY"],
-        keys["URLHAUS_API_KEY"],
+        keys["ABUSECH_API_KEY"],
     )
 
 

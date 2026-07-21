@@ -59,6 +59,24 @@ def validate_provider(slug, key):
             )
             return status_from_response(response)
 
+        if slug == "abusech":
+            response = requests.post(
+                "https://mb-api.abuse.ch/api/v1/",
+                headers={"Auth-Key": key},
+                data={"query": "get_info", "hash": "0" * 64},
+                timeout=REQUEST_TIMEOUT,
+            )
+            if response.status_code == 200:
+                query_status = response.json().get("query_status")
+                if query_status in ("no_api_key", "user_blacklisted"):
+                    return {
+                        "status": "invalid",
+                        "http_status": response.status_code,
+                        "reason": query_status,
+                    }
+                return {"status": "valid", "http_status": response.status_code}
+            return status_from_response(response)
+
         return {
             "status": "not_checked",
             "reason": "No safe lightweight validation endpoint is configured for this provider.",

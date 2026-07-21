@@ -25,7 +25,7 @@ SentientCheck can run as:
 | URL | VirusTotal v3, urlscan.io, URLhaus |
 | File or hash | VirusTotal v3, MalwareBazaar, Hybrid Analysis, URLhaus |
 
-VirusTotal is required for the baseline feature set. The other keys are optional but improve coverage. MalwareBazaar lookups do not require a key for the current hash lookup flow.
+VirusTotal is required for the baseline feature set. The other keys are optional but improve coverage. URLhaus and MalwareBazaar share one abuse.ch `Auth-Key`.
 
 ## Installation
 
@@ -56,10 +56,10 @@ VT_API_KEY=your_virustotal_key
 ABUSE_API_KEY=your_abuseipdb_key
 URLSCAN_API_KEY=your_urlscan_key
 HYBRID_API_KEY=your_hybrid_analysis_key
-URLHAUS_API_KEY=your_urlhaus_key
+ABUSECH_API_KEY=your_abuse_ch_auth_key
 ```
 
-Use `.env.example` as the template.
+Use `.env.example` as the template. Create the shared URLhaus/MalwareBazaar key in the [abuse.ch Authentication Portal](https://auth.abuse.ch/). Existing `URLHAUS_API_KEY` values are accepted as a deprecated compatibility fallback; new configurations should use `ABUSECH_API_KEY`.
 
 ## CLI Usage
 

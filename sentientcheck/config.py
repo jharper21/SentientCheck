@@ -14,7 +14,7 @@ API_KEY_ENV_VARS = [
     "ABUSE_API_KEY",
     "URLSCAN_API_KEY",
     "HYBRID_API_KEY",
-    "URLHAUS_API_KEY",
+    "ABUSECH_API_KEY",
 ]
 
 PROVIDERS = {
@@ -46,19 +46,12 @@ PROVIDERS = {
         "features": "file hash reputation",
         "url": "https://www.hybrid-analysis.com/profile",
     },
-    "urlhaus": {
-        "name": "URLhaus",
-        "env_var": "URLHAUS_API_KEY",
+    "abusech": {
+        "name": "abuse.ch",
+        "env_var": "ABUSECH_API_KEY",
         "required": False,
-        "features": "URL and payload reputation",
-        "url": "https://urlhaus.abuse.ch/api/",
-    },
-    "malwarebazaar": {
-        "name": "MalwareBazaar",
-        "env_var": None,
-        "required": False,
-        "features": "file hash reputation",
-        "url": "https://bazaar.abuse.ch/api/",
+        "features": "URLhaus URL/payload and MalwareBazaar file hash reputation",
+        "url": "https://auth.abuse.ch/",
     },
 }
 
@@ -70,7 +63,10 @@ def project_root():
 def load_api_keys(load_dotenv_file=True, dotenv_path=None):
     if load_dotenv_file and load_dotenv is not None:
         load_dotenv(dotenv_path or project_root() / ".env")
-    return {name: os.environ.get(name, "").strip() for name in API_KEY_ENV_VARS}
+    keys = {name: os.environ.get(name, "").strip() for name in API_KEY_ENV_VARS}
+    if not keys["ABUSECH_API_KEY"]:
+        keys["ABUSECH_API_KEY"] = os.environ.get("URLHAUS_API_KEY", "").strip()
+    return keys
 
 
 def mask_secret(value):
@@ -108,5 +104,5 @@ def create_checker(load_dotenv_file=True):
         keys["ABUSE_API_KEY"],
         keys["URLSCAN_API_KEY"],
         keys["HYBRID_API_KEY"],
-        keys["URLHAUS_API_KEY"],
+        keys["ABUSECH_API_KEY"],
     )
